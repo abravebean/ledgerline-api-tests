@@ -67,13 +67,6 @@ jobs:
         if: failure()
         run: python3 .github/scripts/annotate.py mvn.log target/surefire-reports
 
-      - name: Diagnostics
-        if: always()
-        run: |
-          echo "::notice title=surefire files::$(ls target/surefire-reports 2>&1 | tr '\n' ' ' | head -c 900)"
-          echo "::notice title=tests run lines::$(grep -E 'Tests run:|No tests|BUILD' mvn.log | tail -5 | tr '\n' ' ' | head -c 900)"
-          echo "::notice title=test classes::$(ls target/test-classes/com/ledgerline/api/tests 2>&1 | tr '\n' ' ' | head -c 600)"
-
       - name: Job summary
         if: always()
         run: python3 .github/scripts/summary.py target/surefire-reports 2>&1 >> "$GITHUB_STEP_SUMMARY"
