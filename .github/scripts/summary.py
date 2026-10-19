@@ -20,3 +20,7 @@ print(f"**{totals['tests'] - failed - totals['skipped']} passed**, {failed} fail
 print('| | Suite | Tests | Failed | Time |\n|---|---|---|---|---|')
 print('\n'.join(rows) or '| | No results | | | |')
 print('\nThe Cucumber HTML report is in the `test-reports` artifact.')
+
+# Also as an annotation, so the counts show on the run page without opening the summary.
+notice = f"{totals['tests'] - failed - totals['skipped']} passed, {failed} failed, {totals['skipped']} skipped"
+print(f'::notice title=Ledgerline API tests::{notice}', file=sys.stderr)
