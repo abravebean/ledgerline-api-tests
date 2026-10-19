@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Account",
+  "type": "object",
+  "required": ["id", "type", "name", "number", "balanceCents", "balance"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^acc_\\d+$" },
+    "type": { "enum": ["checking", "savings"] },
+    "name": { "type": "string", "minLength": 1 },
+    "number": { "type": "string", "pattern": "^••••\\d{4}$", "description": "Masked: only the last four digits are ever returned" },
+    "balanceCents": { "type": "integer", "minimum": 0 },
+    "balance": { "$ref": "#/definitions/money" }
+  },
+  "definitions": {
+    "money": { "type": "string", "pattern": "^-?\\$\\d{1,3}(,\\d{3})*\\.\\d{2}$" }
+  }
+}

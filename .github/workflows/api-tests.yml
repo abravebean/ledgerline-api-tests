@@ -1,0 +1,84 @@
+name: API tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '17 6 * * *' # nightly, so a change in Ledgerline that breaks the contract is caught within a day
+  workflow_dispatch:
+    inputs:
+      ledgerline_ref:
+        description: Branch or tag of Bank-automation-test-bench to test against
+        default: main
+
+permissions:
+  contents: read
+
+jobs:
+  api-tests:
+    name: REST Assured + Cucumber vs Ledgerline
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      # The system under test: Ledgerline lives in the main portfolio repo.
+      - name: Check out Ledgerline
+        uses: actions/checkout@v4
+        with:
+          repository: abravebean/Bank-automation-test-bench
+          ref: ${{ inputs.ledgerline_ref || 'main' }}
+          path: ledgerline
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ledgerline/package-lock.json
+
+      - name: Start Ledgerline (test hooks on)
+        working-directory: ledgerline
+        env:
+          CHROMEDRIVER_SKIP_DOWNLOAD: 'true'
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+        run: |
+          npm ci --omit=dev --no-audit --no-fund
+          DEMO_BANK_TEST_HOOKS=true PORT=3000 nohup node server.js > ../ledgerline.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3000/api/health && exit 0
+            sleep 1
+          done
+          echo "::error::Ledgerline did not start"; cat ../ledgerline.log; exit 1
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+
+      - name: Run tests
+        env:
+          LEDGERLINE_BASE_URL: http://localhost:3000
+        run: mvn -B -ntp verify 2>&1 | tee mvn.log; exit ${PIPESTATUS[0]}
+
+      # Turns compile errors and failed tests into annotations on the run and the PR.
+      - name: Annotate failures
+        if: failure()
+        run: python3 .github/scripts/annotate.py mvn.log target/surefire-reports
+
+      - name: Job summary
+        if: always()
+        run: python3 .github/scripts/summary.py target/surefire-reports >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            target/cucumber-report.html
+            target/cucumber.json
+            target/surefire-reports/
+            ledgerline.log
+          retention-days: 30

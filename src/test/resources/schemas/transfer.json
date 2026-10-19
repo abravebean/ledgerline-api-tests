@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "POST /bank/api/transfers (201)",
+  "type": "object",
+  "required": ["transfer", "balances"],
+  "additionalProperties": false,
+  "properties": {
+    "transfer": {
+      "type": "object",
+      "required": ["id", "reference", "fromAccountId", "toAccountId", "amountCents", "amount", "createdAt"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^trf_\\d+$" },
+        "reference": { "type": "string", "pattern": "^LL-\\d+$" },
+        "fromAccountId": { "type": "string" },
+        "toAccountId": { "type": "string" },
+        "amountCents": { "type": "integer", "minimum": 1 },
+        "amount": { "type": "string" },
+        "memo": { "type": "string", "maxLength": 80 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "balances": {
+      "type": "object",
+      "minProperties": 2,
+      "maxProperties": 2,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["balanceCents", "balance"],
+        "properties": {
+          "balanceCents": { "type": "integer", "minimum": 0 },
+          "balance": { "type": "string" }
+        }
+      }
+    }
+  }
+}
