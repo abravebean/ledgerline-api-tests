@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: abravebean/Bank-automation-test-bench
-          ref: ${{ inputs.ledgerline_ref || 'feature/portfolio-polish' }}
+          ref: ${{ inputs.ledgerline_ref || 'main' }}
           path: ledgerline
 
       - uses: actions/setup-node@v5
