@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.ledgerline</groupId>
+  <artifactId>ledgerline-ui-tests</artifactId>
+  <version>1.0.0</version>
+  <name>Ledgerline UI tests (Selenium WebDriver + TestNG)</name>
+
+  <properties>
+    <maven.compiler.release>17</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <selenium.version>4.27.0</selenium.version>
+    <testng.version>7.10.2</testng.version>
+    <jackson.version>2.18.1</jackson.version>
+    <assertj.version>3.26.3</assertj.version>
+    <!-- Override on the command line: -Dledgerline.baseUrl=... -Dbrowser=firefox -Dheadless=false -Dsuite=testng-smoke -->
+    <suite>testng</suite>
+    <ledgerline.baseUrl>http://localhost:3000</ledgerline.baseUrl>
+    <browser>chrome</browser>
+    <headless>true</headless>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-java</artifactId>
+      <version>${selenium.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>${testng.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>${assertj.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.2</version>
+        <configuration>
+          <suiteXmlFiles>
+            <suiteXmlFile>${suite}.xml</suiteXmlFile>
+          </suiteXmlFiles>
+          <systemPropertyVariables>
+            <ledgerline.baseUrl>${ledgerline.baseUrl}</ledgerline.baseUrl>
+            <browser>${browser}</browser>
+            <headless>${headless}</headless>
+          </systemPropertyVariables>
+          <trimStackTrace>false</trimStackTrace>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

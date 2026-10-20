@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   api-tests:
-    name: REST Assured + Cucumber vs Ledgerline
+    name: API (REST Assured + Cucumber) and UI (Selenium + TestNG) vs Ledgerline
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -38,6 +38,7 @@ jobs:
           cache-dependency-path: ledgerline/package-lock.json
 
       - name: Start Ledgerline (test hooks on)
+        id: ledgerline
         working-directory: ledgerline
         env:
           CHROMEDRIVER_SKIP_DOWNLOAD: 'true'
@@ -57,19 +58,33 @@ jobs:
           java-version: 17
           cache: maven
 
-      - name: Run tests
+      - name: API tests (REST Assured, JUnit 5, Cucumber)
+        id: api
         env:
           LEDGERLINE_BASE_URL: http://localhost:3000
         run: mvn -B -ntp verify 2>&1 | tee mvn.log; exit ${PIPESTATUS[0]}
 
+      # Runs even if an API test failed, so one suite's failure never hides the other's results.
+      # Chrome is preinstalled on the runner; Selenium Manager fetches the matching driver.
+      - name: UI tests (Selenium WebDriver, TestNG, Chrome headless)
+        id: ui
+        if: ${{ !cancelled() && steps.ledgerline.outcome == 'success' }}
+        env:
+          LEDGERLINE_BASE_URL: http://localhost:3000
+        run: mvn -B -ntp -f ui-tests/pom.xml verify 2>&1 | tee ui-mvn.log; exit ${PIPESTATUS[0]}
+
       # Turns compile errors and failed tests into annotations on the run and the PR.
       - name: Annotate failures
         if: failure()
-        run: python3 .github/scripts/annotate.py mvn.log target/surefire-reports
+        run: |
+          python3 .github/scripts/annotate.py mvn.log target/surefire-reports
+          python3 .github/scripts/annotate.py ui-mvn.log ui-tests/target/surefire-reports ui-tests
 
       - name: Job summary
         if: always()
-        run: python3 .github/scripts/summary.py target/surefire-reports 2>&1 >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          python3 .github/scripts/summary.py target/surefire-reports "Ledgerline API tests" 2>&1 >> "$GITHUB_STEP_SUMMARY"
+          python3 .github/scripts/summary.py ui-tests/target/surefire-reports "Ledgerline UI tests" 2>&1 >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload reports
         if: always()
@@ -80,5 +95,7 @@ jobs:
             target/cucumber-report.html
             target/cucumber.json
             target/surefire-reports/
+            ui-tests/target/surefire-reports/
+            ui-tests/target/screenshots/
             ledgerline.log
           retention-days: 30
