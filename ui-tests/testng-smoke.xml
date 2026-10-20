@@ -1,0 +1,17 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!-- The quick pre-merge check: only tests in the "smoke" group. mvn verify -Dsuite=testng-smoke -->
+<suite name="Ledgerline UI smoke" parallel="methods" thread-count="2" verbose="1">
+  <listeners>
+    <listener class-name="com.ledgerline.ui.support.ScreenshotOnFailure"/>
+  </listeners>
+  <test name="Smoke">
+    <groups>
+      <run>
+        <include name="smoke"/>
+      </run>
+    </groups>
+    <packages>
+      <package name="com.ledgerline.ui.tests"/>
+    </packages>
+  </test>
+</suite>

@@ -1,0 +1,16 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!--
+  Ledgerline UI suite. Test methods run in parallel, four browsers at a time:
+  each thread gets its own WebDriver (ThreadLocal) and each test its own customer,
+  so nothing is shared. Run one group with: mvn verify -Dgroups=smoke
+-->
+<suite name="Ledgerline UI" parallel="methods" thread-count="4" verbose="1">
+  <listeners>
+    <listener class-name="com.ledgerline.ui.support.ScreenshotOnFailure"/>
+  </listeners>
+  <test name="Ledgerline UI (Selenium WebDriver)">
+    <packages>
+      <package name="com.ledgerline.ui.tests"/>
+    </packages>
+  </test>
+</suite>
